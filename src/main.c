@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
     resizeWindow(WindowWidth, WindowHeight);
 
     bool running = true;
+    bool urlbarselected = false;
 
     while (running)
     {
@@ -78,6 +79,17 @@ int main(int argc, char *argv[])
                     resizeWindow(e.window.data1, e.window.data2);
                     break;
 
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    if (e.button.button == SDL_BUTTON_LEFT) {
+                        SDL_Log("Left mouse button pressed at (%f, %f)",
+                        e.button.x,
+                        e.button.y);
+                        if(e.button.y < 35){
+                            urlbarselected = true;
+                        }else{
+                            urlbarselected = false;
+                        }
+                    }
                 default:
                     break;
             }
@@ -86,13 +98,20 @@ int main(int argc, char *argv[])
         SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
         SDL_RenderClear(renderer);
 
-        SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+        if(urlbarselected){
+            SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
+        }else{
+            SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+        }
+        
         SDL_RenderFillRect(renderer, &urlBar);
 
         SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
         SDL_RenderFillRect(renderer, &urlBottom);
 
         SDL_RenderPresent(renderer);
+
+        SDL_Delay(16);
     }
 
     SDL_DestroyWindow(window);
