@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include "../brand/var.h"
 #include "features.h"
@@ -47,6 +48,14 @@ int main(int argc, char *argv[])
     {
         SDL_Log("SDL_Init failed: %s", SDL_GetError());
         return 1;
+    }
+
+    TTF_Init();
+
+    TTF_Font *font = TTF_OpenFont("font.ttf", 32);
+
+    if (!font) {
+        SDL_Log("Font error: %s", SDL_GetError());
     }
 
     if (!SDL_CreateWindowAndRenderer(
@@ -112,7 +121,8 @@ int main(int argc, char *argv[])
                             size_t len = strlen(url);
 
                             if (len > 0)
-                                url[len - 1] = '\0';
+                                if(urlbarselected)
+                                    url[len - 1] = '\0';
  
                             fflush(stdout);
                             break;
@@ -148,6 +158,25 @@ int main(int argc, char *argv[])
         SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
         SDL_RenderFillRect(renderer, &urlBottom);
 
+        SDL_Color white = {255, 255, 255, 255};
+
+        SDL_Surface *textSurface =
+        TTF_RenderText_Blended(font, url, 0, white);
+
+        SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+        SDL_DestroySurface(textSurface);
+
+        float w, h;
+        SDL_GetTextureSize(textTexture, &w, &h);
+
+        SDL_FRect dst = {
+            0.0f, 0.0f,
+            w, 35.0f
+        };
+
+        SDL_RenderTexture(renderer, textTexture, NULL, &dst);
+
         SDL_RenderPresent(renderer);
 
         SDL_snprintf(title, sizeof(title), "Katzi-Browser - %s", url);
@@ -158,6 +187,8 @@ int main(int argc, char *argv[])
 
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
+    TTF_CloseFont(font);
+    TTF_Quit();
     SDL_Quit();
 
     return 0;
