@@ -2,17 +2,39 @@ TARGET = katzi
 GIT_HASH := $(shell git rev-parse --short HEAD)
 
 CC = gcc
-CCFLAGS = -Wall -Wextra -O2 -std=c++17
+
+SDL3 = E:/SDL3/SDL3-3.4.8/x86_64-w64-mingw32
+
+CFLAGS = -Wall -Wextra -O2 -std=c11 -I$(SDL3)/include
+LDFLAGS = -L$(SDL3)/lib
+LDLIBS = -lSDL3
+
+ifeq ($(OS),Windows_NT)
+CFLAGS += -mwindows
+LDFLAGS += -mwindows -lws2_32
+endif
 
 SRCS := $(wildcard src/*.c)
-OBJS := $(SRCS:.c=.o)
+OBJS := $(SRCS:.c=.o) #./lib/kurl/kurl.o
 
-.PHONY: all run
+all: lib $(TARGET)
 
-all: $(TARGET)
+.PHONY: all clean lib
+
+lib:
+	mkdir -p lib
+	cd lib && git clone https://github.com/KatziIndustries/kurl.git
+	cd lib/kurl && ./lib.sh
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $(TARGET)
+	"E:\msys2\mingw64\bin\windres.exe" -O coff app.rc -o app.res
+	$(CC) $(OBJS) app.res -o $@ $(LDFLAGS) $(LDLIBS) 
 
-%.o: %.cpp
-	$(CC) $(CCFLAGS) -c $< -o $@
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJS) $(TARGET)
+	rm -fr lib
+	rm -f app.res
+
