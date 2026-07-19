@@ -102,11 +102,31 @@ int main(int argc, char *argv[])
                     if (len + add < URL_LENGTH) {
                         strcat(url, e.text.text);
                     }
-
-                    printf("\rText: %s", url);
+                    break;
 
                 case SDL_EVENT_KEY_DOWN:
-                    if(e.key.key){}
+                    switch (e.key.key)
+                    {
+                        case SDLK_BACKSPACE:
+                        {
+                            size_t len = strlen(url);
+
+                            if (len > 0)
+                                url[len - 1] = '\0';
+
+                            fflush(stdout);
+                            break;
+                        }
+
+                        case SDLK_RETURN:
+                        {
+                            SDL_StopTextInput(window);
+                            urlbarselected = false;
+
+                            fflush(stdout);
+                            break;
+                        }
+                    }
                     break;
 
                 default:
