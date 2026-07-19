@@ -5,6 +5,8 @@
 #include "../brand/var.h"
 #include "features.h"
 
+#define URL_LENGTH 256
+
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
@@ -34,7 +36,9 @@ void resizeWindow(int newWidth, int newHeight)
 
 int main(int argc, char *argv[])
 {
-    char *url = features(argc, argv);
+    char url[URL_LENGTH];
+    strncpy(url, features(argc, argv), URL_LENGTH - 1);
+    url[URL_LENGTH - 1] = '\0';
 
     char title[512];
     snprintf(title, sizeof(title), "Katzi-Browser - %s", url);
@@ -61,6 +65,7 @@ int main(int argc, char *argv[])
     resizeWindow(WindowWidth, WindowHeight);
 
     bool running = true;
+    bool urlbarselected = false;
 
     while (running)
     {
@@ -78,6 +83,52 @@ int main(int argc, char *argv[])
                     resizeWindow(e.window.data1, e.window.data2);
                     break;
 
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    if (e.button.button == SDL_BUTTON_LEFT) {
+                        if(e.button.y < 35){
+                            SDL_StartTextInput(window);
+                            urlbarselected = true;
+                        }else{
+                            SDL_StopTextInput(window);
+                            urlbarselected = false;
+                        }
+                    }
+                    break;
+
+                case SDL_EVENT_TEXT_INPUT:
+                    size_t len = strlen(url);
+                    size_t add = strlen(e.text.text);
+
+                    if (len + add < URL_LENGTH) {
+                        strcat(url, e.text.text);
+                    }
+                    break;
+
+                case SDL_EVENT_KEY_DOWN:
+                    switch (e.key.key)
+                    {
+                        case SDLK_BACKSPACE:
+                        {
+                            size_t len = strlen(url);
+
+                            if (len > 0)
+                                url[len - 1] = '\0';
+ 
+                            fflush(stdout);
+                            break;
+                        }
+
+                        case SDLK_RETURN:
+                        {
+                            SDL_StopTextInput(window);
+                            urlbarselected = false;
+
+                            fflush(stdout);
+                            break;
+                        }
+                    }
+                    break;
+
                 default:
                     break;
             }
@@ -86,13 +137,23 @@ int main(int argc, char *argv[])
         SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
         SDL_RenderClear(renderer);
 
-        SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+        if(urlbarselected){
+            SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
+        }else{
+            SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+        }
+        
         SDL_RenderFillRect(renderer, &urlBar);
 
         SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
         SDL_RenderFillRect(renderer, &urlBottom);
 
         SDL_RenderPresent(renderer);
+
+        SDL_snprintf(title, sizeof(title), "Katzi-Browser - %s", url);
+        SDL_SetWindowTitle(window, title);
+
+        SDL_Delay(16);
     }
 
     SDL_DestroyWindow(window);
