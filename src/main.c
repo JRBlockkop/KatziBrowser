@@ -5,6 +5,8 @@
 #include "../brand/var.h"
 #include "features.h"
 
+#define URL_LENGTH 256
+
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
@@ -34,7 +36,9 @@ void resizeWindow(int newWidth, int newHeight)
 
 int main(int argc, char *argv[])
 {
-    char *url = features(argc, argv);
+    char url[URL_LENGTH];
+    strncpy(url, features(argc, argv), URL_LENGTH - 1);
+    url[URL_LENGTH - 1] = '\0';
 
     char title[512];
     snprintf(title, sizeof(title), "Katzi-Browser - %s", url);
@@ -81,15 +85,30 @@ int main(int argc, char *argv[])
 
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
                     if (e.button.button == SDL_BUTTON_LEFT) {
-                        SDL_Log("Left mouse button pressed at (%f, %f)",
-                        e.button.x,
-                        e.button.y);
                         if(e.button.y < 35){
+                            SDL_StartTextInput(window);
                             urlbarselected = true;
                         }else{
+                            SDL_StopTextInput(window);
                             urlbarselected = false;
                         }
                     }
+                    break;
+
+                case SDL_EVENT_TEXT_INPUT:
+                    size_t len = strlen(url);
+                    size_t add = strlen(e.text.text);
+
+                    if (len + add < URL_LENGTH) {
+                        strcat(url, e.text.text);
+                    }
+
+                    printf("\rText: %s", url);
+
+                case SDL_EVENT_KEY_DOWN:
+                    if(e.key.key){}
+                    break;
+
                 default:
                     break;
             }
@@ -110,6 +129,9 @@ int main(int argc, char *argv[])
         SDL_RenderFillRect(renderer, &urlBottom);
 
         SDL_RenderPresent(renderer);
+
+        SDL_snprintf(title, sizeof(title), "Katzi-Browser - %s", url);
+        SDL_SetWindowTitle(window, title);
 
         SDL_Delay(16);
     }
