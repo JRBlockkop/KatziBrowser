@@ -1,7 +1,6 @@
 build/
 *.exe
 src/*.o
-SDL3.dll
 app.res
 
 lib/
