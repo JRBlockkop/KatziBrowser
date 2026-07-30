@@ -17,13 +17,16 @@ OBJS := $(SRCS:.c=.o)
 ifeq ($(OS),Windows_NT)
 CFLAGS += -mwindows -I$(SDL3)/include -I$(SDL3TTF)/include
 LDFLAGS += -mwindows -lws2_32 -L$(SDL3)/lib -L$(SDL3TTF)/lib
-"E:\msys2\mingw64\bin\windres.exe" -O coff app.rc -o app.res
 OBJS += app.res
+
 endif
 
 all: $(TARGET)
 
 .PHONY: all clean
+
+app.res: app.rc
+	"/e/msys2/mingw64/bin/windres.exe" -O coff app.rc -o app.res
 
 $(TARGET): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
